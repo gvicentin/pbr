@@ -10,7 +10,7 @@ int main(void) {
 
     imu_config imu_conf = {
         .accl_scale = IMU_FS_0,
-        .gyro_scale = IMU_FS_0,
+        .gyro_scale = IMU_FS_1,
         .init_calibration = true
     };
     imu_init(imu_conf);
@@ -19,7 +19,9 @@ int main(void) {
 
     while (true) {
         imu_read(accl, &temp, gyro);
-        printf("AcclX: %f, GyroX: %f\n", accl[0], gyro[0]);
+        // printf("%f %f %f %f %f %f\n", accl[0], accl[1], accl[2],
+        //                               gyro[0], gyro[1], gyro[2]);
+        printf("%f %f %f\n", gyro[0], gyro[1], gyro[2]);
         sleep_ms(200);
     }
 
