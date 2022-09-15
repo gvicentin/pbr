@@ -1,6 +1,7 @@
 add_executable(br
         main.c
         imu.c
+        mpu6050.c
         )
 
 pico_enable_stdio_usb(br 1)
