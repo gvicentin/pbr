@@ -50,7 +50,7 @@ void mpu6050_reset(void) {
     // [2:0] -> Clock source. Will be using one of the gyro oscillator
     uint8_t reset_buf[] = {
         MPU6050_REG_PWG_MGMT_1,
-        0b00000000
+        0b00000001
     };
     i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, reset_buf, 2, false);
 }
