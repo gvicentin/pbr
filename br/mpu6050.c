@@ -50,7 +50,7 @@ void mpu6050_reset(void) {
     // [2:0] -> Clock source. Will be using one of the gyro oscillator
     uint8_t reset_buf[] = {
         MPU6050_REG_PWG_MGMT_1,
-        0b10000001
+        0b00000000
     };
     i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, reset_buf, 2, false);
 }
@@ -61,6 +61,7 @@ void mpu6050_set_gyro_fs(mpu6050_gyro_fs gyro_fs) {
         MPU6050_REG_GYRO_CONFIG,
         ((uint8_t) gyro_fs << 3)
     };
+    i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, gyro_buf, 2, false);
 
     // Select correct SSF
     m_gyro_ssf = m_gyro_ssf_values[gyro_fs];
@@ -72,6 +73,7 @@ void mpu6050_set_accel_fs(mpu6050_accel_fs accel_fs) {
         MPU6050_REG_ACCEL_CONFIG,
         ((uint8_t) accel_fs << 3)
     };
+    i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, accel_buf, 2, false);
 
     // Select correct SSF
     m_accel_ssf = m_accel_ssf_values[accel_fs];
