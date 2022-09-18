@@ -1,56 +1,32 @@
-#include <stdbool.h>
 #include <stdio.h>
-#include <stdint.h>
 #include "pico/stdlib.h"
 #include "log.h"
+#include "uln2003.h"
 
-#define IN_1 0
-#define IN_2 1
-#define IN_3 2
-#define IN_4 3
-
-static uint32_t m_bit_mask;
-static uint32_t m_sequence_mask[4];
-
-void step(uint32_t steps);
 
 int main(void) {
     stdio_init_all();
 
-    // Init GPIO
-    m_bit_mask = (1 << IN_1) | (1 << IN_2) |
-                 (1 << IN_3) | (1 << IN_4);
-    gpio_init_mask(m_bit_mask);
-    gpio_set_dir_out_masked(m_bit_mask);
+    LOG_DEBUG("Step motor testing");
 
-    // Init sequence steps
-    bool fullstep = true;
-    if (fullstep) {
-        m_sequence_mask[0] = (1 << IN_1) | (1 << IN_4);
-        m_sequence_mask[1] = (1 << IN_1) | (1 << IN_2);
-        m_sequence_mask[2] = (1 << IN_2) | (1 << IN_3);
-        m_sequence_mask[3] = (1 << IN_3) | (1 << IN_4);
-    }
-    else {
-        m_sequence_mask[0] = (1 << IN_1);
-        m_sequence_mask[1] = (1 << IN_2);
-        m_sequence_mask[2] = (1 << IN_3);
-        m_sequence_mask[3] = (1 << IN_4);
-    }
+    uln2003 motor;
+    uln2003_config motor_config = {
+        .steps_count = ULN2003_28BYJ48_STEPS,
+        .pin_a = 1,
+        .pin_b = 2,
+        .pin_c = 3,
+        .pin_d = 4,
+        .is_fullstep = true
+    };
 
-    gpio_put_masked(m_bit_mask, m_sequence_mask[0]);
+    uln2003_init(&motor, motor_config);
+    uln2003_step(&motor, 10 * ULN2003_28BYJ48_STEPS); // Give 10 full revolutions
 
+    LOG_DEBUG("%u", motor.delay_time);
+    
     while (true) {
-        step(4096);
-        sleep_ms(2500);
+        uln2003_run(&motor);
     }
 
     return 0;
-}
-
-void step(uint32_t steps) {
-    for (uint32_t i = 0; i < steps; i++) {
-        gpio_put_masked(m_bit_mask, m_sequence_mask[i % 4]);
-        busy_wait_us(1300);
-    }
 }
