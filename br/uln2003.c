@@ -32,6 +32,9 @@ int uln2003_init(uln2003 *motor, uln2003_config config) {
 
     uln2003_stop(motor);
     uln2003_set_rpm(motor, ULN2003_DEFAULT_RPM);
+    
+    // TODO: remove me
+    motor->delay_time = 200000;
 
     return 0;
 }
@@ -59,7 +62,8 @@ bool uln2003_run(uln2003 *motor) {
     uint64_t now = time_us_64();
     if (now - motor->last_step_time >= motor->delay_time) {
         // It's time to give a step
-        gpio_put_masked(motor->bit_mask, motor->current_mask);
+        uint32_t seq_mask = motor->sequence_mask[motor->current_mask];
+        gpio_put_masked(motor->bit_mask, seq_mask);
         motor->last_step_time = now;
 
         if (motor->steps > 0) {
