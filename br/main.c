@@ -11,16 +11,15 @@ int main(void) {
 
     uln2003 motor;
     uln2003_config motor_config = {
-        .steps_count = ULN2003_28BYJ48_STEPS,
+        .smethod = ULN2003_FULL_STEP,
         .pin_a = 1,
         .pin_b = 2,
         .pin_c = 3,
         .pin_d = 4,
-        .is_fullstep = false
     };
 
     uln2003_init(&motor, motor_config);
-    uln2003_step(&motor, 1 * ULN2003_28BYJ48_STEPS); // Give 10 full revolutions
+    uln2003_step(&motor, 4096);
 
     LOG_DEBUG("%u", motor.delay_time);
     

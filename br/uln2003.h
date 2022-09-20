@@ -4,19 +4,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// 28BYJ48 Motor number of fullsteps.
-// 
-// stride angle: 5.625 
-// gear ratio: 1/64
-// (360/5.625)*64 = 4096
-#define ULN2003_28BYJ48_STEPS 4096
+// Stepping method
+typedef enum {
+    ULN2003_WAVE_DRIVE = 0,
+    ULN2003_FULL_STEP,
+    ULN2003_HALF_STEP
+} uln2003_sm;
 
 typedef struct uln2003_config_t {
-    // Total steps per revolution
-    uint32_t steps_count;
-
-    // Select fullstep or halfstep
-    bool is_fullstep;
+    // Select stepping method
+    uln2003_sm smethod;
 
     // GPIO pins
     uint8_t pin_a, pin_b,
