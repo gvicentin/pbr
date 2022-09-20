@@ -11,18 +11,15 @@ int main(void) {
 
     uln2003 motor;
     uln2003_config motor_config = {
-        .smethod = ULN2003_FULL_STEP,
+        .smethod = ULN2003_WAVE_DRIVE,
         .pin_a = 1,
         .pin_b = 2,
         .pin_c = 3,
         .pin_d = 4,
     };
-
     uln2003_init(&motor, motor_config);
-    uln2003_step(&motor, 4096);
+    uln2003_step(&motor, -4096);
 
-    LOG_DEBUG("%u", motor.delay_time);
-    
     while (true) {
         uln2003_run(&motor);
     }

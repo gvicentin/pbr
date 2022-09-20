@@ -11,6 +11,7 @@ typedef enum {
     ULN2003_HALF_STEP
 } uln2003_sm;
 
+// Config to init the motor
 typedef struct uln2003_config_t {
     // Select stepping method
     uln2003_sm smethod;
@@ -21,12 +22,15 @@ typedef struct uln2003_config_t {
 } uln2003_config;
 
 typedef struct uln2003_t {
+    // Total steps per revolution
     uint32_t steps_count;
 
+    // Step sequence
     uint32_t bit_mask;
-    uint32_t sequence_mask[4];
+    uint32_t sequence_mask[8];
     uint8_t current_mask;
     
+    // Step to go and timing
     int32_t steps;
     uint64_t last_step_time;
     uint64_t delay_time;
