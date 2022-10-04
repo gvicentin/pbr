@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "hardware/i2c.h"
 
+// Calibration register offset
+#define MPU6050_STATIC_Z_ACCEL_READ 4096
+
 // Gyroscope Full-Scale Range.
 //
 // MPU6050_GFS_X range from -X to +X (°/s)
@@ -41,8 +44,16 @@ void mpu6050_set_gyro_fs(mpu6050_gyro_fs gyro_fs);
 
 void mpu6050_set_accel_fs(mpu6050_accel_fs accel_fs);
 
+void mpu6050_read_raw(int16_t *values);
+
 void mpu6050_read_gyro(float *gyro);
 
 void mpu6050_read_accel(float *accel);
+
+void mpu6050_pre_calibration(void);
+
+void mpu6050_set_gyro_offset(int16_t *offsets);
+
+void mpu6050_set_accel_offset(int16_t *offsets);
 
 #endif // MPU6050_H

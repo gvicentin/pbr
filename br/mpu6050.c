@@ -11,12 +11,18 @@
 #define MPU6050_I2C_ADDR 0x68
 
 // Used registers
+#define MPU6050_REG_ACCEL_OFFS      0x06
+#define MPU6050_REG_GYRO_OFFS       0x13
 #define MPU6050_REG_GYRO_CONFIG     0x1B
 #define MPU6050_REG_ACCEL_CONFIG    0x1C
 #define MPU6050_REG_ACCEL_XOUT_H    0x3B
 #define MPU6050_REG_TEMP_OUT_H      0x41
 #define MPU6050_REG_GYRO_XOUT_H     0x43
 #define MPU6050_REG_PWG_MGMT_1      0x6B
+
+// Calibration scale values
+#define MPU6050_CAL_GYRO_SCALE  2
+#define MPU6050_CAL_ACCEL_SCALE 2
 
 // Raspberry Pi Pico IC2 instance
 static i2c_inst_t *m_i2c_inst = NULL;
@@ -79,6 +85,23 @@ void mpu6050_set_accel_fs(mpu6050_accel_fs accel_fs) {
     m_accel_ssf = m_accel_ssf_values[accel_fs];
 }
 
+void mpu6050_read_raw(int16_t *values) {
+    // Read from all sensors
+    uint8_t read_buf[14];
+    uint8_t reg_data[] = { MPU6050_REG_ACCEL_XOUT_H }; 
+    i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, reg_data, 1, true);
+    i2c_read_blocking(m_i2c_inst, MPU6050_I2C_ADDR, read_buf, 14, false);
+
+    int16_t values_raw[6];
+    values_raw[0] = read_buf[0] << 8 | read_buf[1];
+    values_raw[1] = read_buf[2] << 8 | read_buf[3];
+    values_raw[2] = read_buf[4] << 8 | read_buf[5];
+    // ignoring temperature values
+    values_raw[3] = read_buf[8] << 8 | read_buf[9];
+    values_raw[4] = read_buf[10] << 8 | read_buf[11];
+    values_raw[5] = read_buf[12] << 8 | read_buf[13];
+}
+
 void mpu6050_read_gyro(float *gyro) {
     // Read data from the sensot
     uint8_t read_buf[6];
@@ -115,4 +138,28 @@ void mpu6050_read_accel(float *accel) {
     accel[0] = accel_raw[0] / m_accel_ssf;
     accel[1] = accel_raw[1] / m_accel_ssf;
     accel[2] = accel_raw[2] / m_accel_ssf;
+}
+
+void mpu6050_pre_calibration(void) {
+    // Use correct scale
+    mpu6050_set_gyro_fs(MPU6050_CAL_GYRO_SCALE);
+    mpu6050_set_accel_fs(MPU6050_CAL_ACCEL_SCALE);
+}
+
+void mpu6050_set_gyro_offset(int16_t *offsets) {
+    uint8_t offs_buf[] = { 
+        MPU6050_REG_GYRO_OFFS,
+        offsets[0] >> 8 & 0xff,
+        offsets[0] & 0xff,
+        offsets[1] >> 8 & 0xff,
+        offsets[1] & 0xff,
+        offsets[2] >> 8 & 0xff,
+        offsets[2] & 0xff
+    };
+    i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, offs_buf, 7, false);
+}
+
+void mpu6050_set_accel_offset(int16_t *offsets) {
+    // TODO: reading existing bias
+    // TODO: put offset to registers
 }
