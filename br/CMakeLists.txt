@@ -21,6 +21,6 @@ pico_add_extra_outputs(br)
 # 4 -> RAW SENSORS
 # 5 -> IMU
 # 6 -> PID
-target_compile_definitions(br PUBLIC LOG_LEVEL=2)
+target_compile_definitions(br PUBLIC LOG_LEVEL=4)
 
 target_link_libraries(br pico_stdlib hardware_i2c)

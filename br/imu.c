@@ -6,7 +6,10 @@
 #include "log.h"
 #include "mpu6050.h"
 
-void imu_calibrate(uint32_t discard_count, uint32_t avg_count) {
+static float m_gyro[3];
+static float m_accel[3];
+
+static void imu_calibrate(uint32_t discard_count, uint32_t avg_count) {
     int16_t read_values[6] = { 0 };
     int32_t sum[6] = { 0 };
     int16_t avg[6] = { 0 }, bias[6] = { 0 };
@@ -65,4 +68,14 @@ int imu_init(bool calibrate) {
     if (calibrate) {
         imu_calibrate(1000, 5000);
     }
+
+    // Setup full-scale
+    mpu6050_set_gyro_fs(MPU6050_GFS_500);
+    mpu6050_set_accel_fs(MPU6050_AFS_4G);
+}
+
+void imu_calculate(void) {
+    mpu6050_read_gyro(m_gyro);
+    mpu6050_read_accel(m_accel);
+    SP_RAW_SENSORS(m_gyro, m_accel);
 }

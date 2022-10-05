@@ -5,4 +5,6 @@
 
 int imu_init(bool calibrate);
 
+void imu_calculate(void);
+
 #endif // IMU_H
