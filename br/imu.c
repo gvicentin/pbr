@@ -2,17 +2,19 @@
 
 #include <stdint.h>
 #include <pico/stdlib.h>
+#include <hardware/i2c.h>
 
 #include "log.h"
 #include "mpu6050.h"
 
 static float m_gyro[3];
 static float m_accel[3];
+static float m_gyro_accum[3] = { 0 };
 
 static void imu_calibrate(uint32_t discard_count, uint32_t avg_count) {
-    int16_t read_values[6] = { 0 };
-    int32_t sum[6] = { 0 };
-    int16_t avg[6] = { 0 }, bias[6] = { 0 };
+    float accel_readings[3] = { 0 };
+    float gyro_readings[3] = { 0 };
+    float sum[6] = { 0 }, avg[6] = { 0 }, bias[6] = { 0 };
 
     LOG_DEBUG("Calibrating sensor");
 
@@ -21,21 +23,24 @@ static void imu_calibrate(uint32_t discard_count, uint32_t avg_count) {
 
     // Discard initial readings
     for(uint32_t i = 0; i < discard_count; ++i) {
-        mpu6050_read_raw(read_values);
+        mpu6050_read_accel(accel_readings);
+        mpu6050_read_gyro(gyro_readings);
         busy_wait_ms(5);
     }
 
     // Calculate averages
     for (uint32_t i = 0; i < avg_count; ++i) {
-        mpu6050_read_raw(read_values);
+        mpu6050_read_accel(accel_readings);
+        mpu6050_read_gyro(gyro_readings);
+
         // Accel X, Y and Z
-        sum[0] += read_values[0];
-        sum[1] += read_values[1];
-        sum[2] += read_values[2];
+        sum[0] += accel_readings[0];
+        sum[1] += accel_readings[1];
+        sum[2] += accel_readings[2];
         // Gyro X, Y and Z
-        sum[3] += read_values[3];
-        sum[4] += read_values[4];
-        sum[5] += read_values[5];
+        sum[3] += gyro_readings[0];
+        sum[4] += gyro_readings[1];
+        sum[5] += gyro_readings[2];
         busy_wait_ms(5);
     }
 
@@ -45,13 +50,14 @@ static void imu_calibrate(uint32_t discard_count, uint32_t avg_count) {
     }
 
     // Compensate for gravity on accel Z axis
-    bias[2] = bias[2] - MPU6050_STATIC_Z_ACCEL_READ;
+    bias[2] = bias[2] + 1.0f;
+
+    LOG_DEBUG("Accel bias: %f, %f, %f", bias[0], bias[1], bias[2]);
+    LOG_DEBUG("Gyro bias: %f, %f, %f", bias[3], bias[4], bias[5]);
 
     // Correcting sensor
-    int16_t *accel_offsets = bias;
-    int16_t *gyro_offsets = bias + 3;
-    mpu6050_set_accel_offset(accel_offsets);
-    mpu6050_set_gyro_offset(gyro_offsets);
+    mpu6050_set_accel_offset(bias);
+    mpu6050_set_gyro_offset(bias + 3);
 }
 
 int imu_init(bool calibrate) {
@@ -59,14 +65,14 @@ int imu_init(bool calibrate) {
 
     // Initialize sensor
     mpu6050_config mpu_config = {
-        .i2c_inst = PICO_DEFAULT_I2C_INSTANCE,
+        .i2c_inst = i2c_default,
         .i2c_sda_pin = PICO_DEFAULT_I2C_SDA_PIN,
         .i2c_scl_pin = PICO_DEFAULT_I2C_SCL_PIN
     };
     mpu6050_init(mpu_config);
 
     if (calibrate) {
-        imu_calibrate(1000, 5000);
+        imu_calibrate(100, 1000);
     }
 
     // Setup full-scale
@@ -75,7 +81,13 @@ int imu_init(bool calibrate) {
 }
 
 void imu_calculate(void) {
-    mpu6050_read_gyro(m_gyro);
     mpu6050_read_accel(m_accel);
+    mpu6050_read_gyro(m_gyro);
+
+    m_gyro_accum[0] += m_gyro[0] * 0.05f;
+    m_gyro_accum[1] += m_gyro[1] * 0.05f;
+    m_gyro_accum[2] += m_gyro[2] * 0.05f;
+
     SP_RAW_SENSORS(m_gyro, m_accel);
+    SP_IMU(m_gyro_accum, m_accel);
 }

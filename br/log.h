@@ -49,4 +49,11 @@
 #define SP_RAW_SENSORS(gyro, accel)
 #endif
 
+#if LOG_LEVEL == LEVEL_SP_IMU
+#define SP_IMU(gyro, accel) \
+    printf("%f,%f,%f,%f,%f,%f\n", gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2])
+#else
+#define SP_IMU
+#endif
+
 #endif // LOG_H

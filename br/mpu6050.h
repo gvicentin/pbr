@@ -44,16 +44,14 @@ void mpu6050_set_gyro_fs(mpu6050_gyro_fs gyro_fs);
 
 void mpu6050_set_accel_fs(mpu6050_accel_fs accel_fs);
 
-void mpu6050_read_raw(int16_t *values);
-
 void mpu6050_read_gyro(float *gyro);
 
 void mpu6050_read_accel(float *accel);
 
 void mpu6050_pre_calibration(void);
 
-void mpu6050_set_gyro_offset(int16_t *offsets);
+void mpu6050_set_gyro_offset(float *offsets);
 
-void mpu6050_set_accel_offset(int16_t *offsets);
+void mpu6050_set_accel_offset(float *offsets);
 
 #endif // MPU6050_H

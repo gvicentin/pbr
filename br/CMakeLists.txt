@@ -5,8 +5,8 @@ add_executable(br
         imu.c
         )
 
-pico_enable_stdio_usb(br 1)
-pico_enable_stdio_uart(br 0)
+# pico_enable_stdio_usb(br 1)
+# pico_enable_stdio_uart(br 0)
 
 pico_add_extra_outputs(br)
 

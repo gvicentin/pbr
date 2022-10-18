@@ -85,23 +85,6 @@ void mpu6050_set_accel_fs(mpu6050_accel_fs accel_fs) {
     m_accel_ssf = m_accel_ssf_values[accel_fs];
 }
 
-void mpu6050_read_raw(int16_t *values) {
-    // Read from all sensors
-    uint8_t read_buf[14];
-    uint8_t reg_data[] = { MPU6050_REG_ACCEL_XOUT_H }; 
-    i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, reg_data, 1, true);
-    i2c_read_blocking(m_i2c_inst, MPU6050_I2C_ADDR, read_buf, 14, false);
-
-    int16_t values_raw[6];
-    values_raw[0] = read_buf[0] << 8 | read_buf[1];
-    values_raw[1] = read_buf[2] << 8 | read_buf[3];
-    values_raw[2] = read_buf[4] << 8 | read_buf[5];
-    // ignoring temperature values
-    values_raw[3] = read_buf[8] << 8 | read_buf[9];
-    values_raw[4] = read_buf[10] << 8 | read_buf[11];
-    values_raw[5] = read_buf[12] << 8 | read_buf[13];
-}
-
 void mpu6050_read_gyro(float *gyro) {
     // Read data from the sensot
     uint8_t read_buf[6];
@@ -146,20 +129,27 @@ void mpu6050_pre_calibration(void) {
     mpu6050_set_accel_fs(MPU6050_CAL_ACCEL_SCALE);
 }
 
-void mpu6050_set_gyro_offset(int16_t *offsets) {
+void mpu6050_set_gyro_offset(float *offsets) {
+    int16_t calc_offsets[3];
+
+    for (uint8_t i = 0; i < 3; ++i) {
+        // Find correct values to put in the register
+        calc_offsets[i] = (int16_t) (offsets[i] * m_gyro_ssf);
+    }
+    
     uint8_t offs_buf[] = { 
         MPU6050_REG_GYRO_OFFS,
-        offsets[0] >> 8 & 0xff,
-        offsets[0] & 0xff,
-        offsets[1] >> 8 & 0xff,
-        offsets[1] & 0xff,
-        offsets[2] >> 8 & 0xff,
-        offsets[2] & 0xff
+        calc_offsets[0] >> 8 & 0xff,
+        calc_offsets[0] & 0xff,
+        calc_offsets[1] >> 8 & 0xff,
+        calc_offsets[1] & 0xff,
+        calc_offsets[2] >> 8 & 0xff,
+        calc_offsets[2] & 0xff
     };
     i2c_write_blocking(m_i2c_inst, MPU6050_I2C_ADDR, offs_buf, 7, false);
 }
 
-void mpu6050_set_accel_offset(int16_t *offsets) {
+void mpu6050_set_accel_offset(float *offsets) {
     // TODO: reading existing bias
     // TODO: put offset to registers
 }
